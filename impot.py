@@ -1,4 +1,4 @@
-from exper import CatalogConnector
+from thread import CatalogConnector
 
 
 # Example usage:
