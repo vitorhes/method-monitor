@@ -1,39 +1,66 @@
+from typing import List, Optional, Callable, Union, Dict
+from payload_handler import PayloadHandler
 import threading
+import uuid
 
-class MethodMonitor:
-    def __call__(self, *params_to_collect):
-        def decorator(method):
-            def wrapper(instance, *args, **kwargs):
+
+class MonitorFactory:
+    def __init__(self) -> None:
+        self.generated_uuid = str(uuid.uuid4())
+
+    def __call__(self, *params_to_collect: Union[str, None]) -> Callable:
+        """
+        Decorator factory. If params_to_collect is empty, collect all parameters. 
+        If specified, collect only the specified parameters.
+
+        Args:
+            *params_to_collect (Union[str, None]): Parameters to collect if specified.
+
+        Returns:
+            Callable: Decorator function.
+        """
+        def decorator(method: Callable) -> Callable:
+            """
+            Decorator function.
+
+            Args:
+                method (Callable): Original method.
+
+            Returns:
+                Callable: Decorated method.
+            """
+            def wrapper(instance: object, *args, **kwargs) -> Optional[object]:
+                """
+                Wrapper function around the original method.
+
+                Args:
+                    instance (object): Instance of the class.
+                    *args: Positional arguments.
+                    **kwargs: Keyword arguments.
+
+                Returns:
+                    Optional[object]: Result of the original method.
+                """
                 try:
-                    arguments = {param: value for param, value in zip(params_to_collect, args)}
-                    arguments.update(kwargs)
+                    if params_to_collect:
+                        # Collect only specified parameters
+                        arguments = {param: kwargs.get(param) if param in kwargs else args[i] for i, param in enumerate(params_to_collect)}
+                    else:
+                        # Collect all parameters
+                        arguments = {f"arg_{i}": arg for i, arg in enumerate(args)}
+                        arguments.update(kwargs)
                     
+                    submodule_name = method.__module__
                     payload = {"method": method.__name__, "arguments": arguments}
-                    thread = threading.Thread(target=PayloadSender.send_http_request, args=(payload,))
+                    
+                    thread = threading.Thread(target=PayloadHandler.create_and_send, args=(submodule_name, payload, self.generated_uuid,), daemon=True)
                     thread.start()
+                    
                     return method(instance, *args, **kwargs)
                 except Exception as e:
                     return method(instance, *args, **kwargs)
+                    pass
 
             return wrapper
 
         return decorator
-
-
-class PayloadSender:
-    @staticmethod
-    def send_http_request(payload):
-        current_thread = threading.current_thread()
-        print(f"Sending HTTP request with payload: {payload} from thread {current_thread.name} ({current_thread.ident})")
-
-class CatalogConnector:
-    metadata_updater = MethodMonitor()
-
-    @metadata_updater("database", "table")
-    def get_table_to_df(self, database, table, additional_param):
-        print("hello")
-   
-    @metadata_updater("df", "database", "table")
-    def put_df_to_table(self, df, database, table):
-        print("putt")
-
