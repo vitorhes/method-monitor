@@ -1,7 +1,0 @@
-[] - Coletar parametros passados ao decorator
-[] - Se não for passado parametro, coletar tudo
-[] - Preparar e enviar payload em outra thread
-[] - Criar correlation id no instanciamento da factory (no init?)
-[] - O usuário pode chamar o método com argumentos posicionais
-[] - O usuário pode chamar o método com argumetos key=value
-[] - O usuário pode chamar o método de forma mista (posicional e key=value)
