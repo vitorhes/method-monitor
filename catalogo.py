@@ -1,5 +1,5 @@
 
-from init_mokc import monitor
+from observability.mock_exit import monitor
 
 
 class CatalogConnector:
