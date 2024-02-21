@@ -1,21 +1,21 @@
-import importlib
-import pkgutil
+from pyspark.sql import SparkSession
+from pyspark.sql.functions import col
 
-def get_all_classes(module):
-    classes = []
-    for obj_name in dir(module):
-        obj = getattr(module, obj_name)
-        if isinstance(obj, type):
-            classes.append(obj)
-        elif inspect.ismodule(obj):
-            # Recursively get classes from nested modules
-            classes.extend(get_all_classes(obj))
-    return classes
+# Create a Spark session
+spark = SparkSession.builder.appName("example").getOrCreate()
 
-__all__ = [module_name for _, module_name, _ in pkgutil.iter_modules(globals()['__path__'])]
+# Define the number of columns
+num_columns = 200
 
-# Import all classes from discovered modules
-classes_to_patch = []
-for module_name in __all__:
-    module = importlib.import_module(f"{__package__}.{module_name}")
-    classes_to_patch.extend(get_all_classes(module))
+# Create a DataFrame with 200 columns filled with null values
+df = spark.range(1).select([col(f"Column_{i}").cast("string").alias(f"Column_{i}") for i in range(num_columns)])
+
+# Add rows to the DataFrame
+new_rows = [(f"value_{j}" for j in range(num_columns)) for i in range(5)]  # Assuming 5 rows
+new_df = spark.createDataFrame(new_rows, [f"Column_{i}" for i in range(num_columns)])
+
+# Union the DataFrames to combine the original and new rows
+result_df = df.union(new_df)
+
+# Show the resulting DataFrame
+result_df.show(truncate=False)
