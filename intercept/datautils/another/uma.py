@@ -1,0 +1,2 @@
+class Duas():
+    print("hello")

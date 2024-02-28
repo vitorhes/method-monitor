@@ -1,9 +1,9 @@
 # datautils.py
 
-from .pyfiling import track_method_call
 
 # Original class definition in datautils
 class MyClass:
+    print("alo")
     def method1(self, arg):
         # Original logic
         print(f"Original method1 called with arg: {arg}")
